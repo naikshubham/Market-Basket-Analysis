@@ -113,6 +113,79 @@ frequent_itemsets = apriori(onehot, min_support=0.001, max_len = 2, use_colnames
 rules = association_rules(frequent_itemsets, metric="lift", min_threshold=1.0)
 ```
 
+### The simplest metric
+- Market Baset Analysis is centered around the identification and analysis of rules. To get those rules, we'll make use of a metric called support and a process called pruning.
+
+#### Metrics and pruning
+- E.g , under some metric the rule "if humor then poetry" might map to the number 0.81. The same metric might yield 0.23 for "if fiction then travel".
+- **Pruning** makes use of a metric to discard rules. For instance, we could keep only those rules with a metric value of greater than 0.50. In this example, we'd retain "if humor then poetry" and discard "if fiction then travel".
+- The simplest metric is something called support, which measures the frequency with which itemsets appear in transcations. Support can also be applied to single items.
+
+<img src="data/metric.JPG" width="350" title="Metric">
+
+#### Support for language
+- As a concrete example, let's check the support for language in the first 10 transcations of the bookstore dataset.
+
+<img src="data/language.JPG" width="350" title="Language">
+
+- Language appears in transcation 1 and 3. Thus, the support value = 2/10 = 0.2
+
+#### Support for {Humor} -> {Language}
+
+<img src="data/support_humor.JPG" width="350" title="support_humor">
+
+- We would compute the share of transcations that contained both humor and language. So the support = 1/10 = 0.1
+- Notice that we would get the same value if we instead computed support for "if language then humor"
+
+#### Preparing the data
+- Compute support in a more systematic way for all items.
+
+```python
+from mlxtend.preprocessing import TranscationEncoder
+
+# instantiate transcation encoder
+encoder = TranscationEncoder().fit(transcations)
+
+# one-hot encode itemsets by applying fit and transform
+# each column in onehot corresponds to one of the nine items in our dataset
+# if the item is present in a transcation, this is encoded as TRUE.Otherwise it is FALSE
+onehot = encoder.transform(transcations)
+
+# convert one-hot encoded data to DataFrame
+onehot = pd.DataFrame(onehot, columns = encoder.columns_)
+print(onehot)
+```
+
+- We'll use the item names as column headers and will recover them using the column underscore attribute of encoder. We can now calculate the support metric by computing the mean over each column.
+
+```python
+# computing support for single items
+print(onehot.mean())
+```
+
+#### Computing support for multiple items
+- Compute support for rule such as "if fiction then poetry". We can create a new column in the DataFrame that is TRUE if both the fiction and poetry columns are true using numpy logical and, along with the 2 columns as arguments.
+
+```python
+import numpy as np
+
+# define itemset that contains fiction and poetry
+onehot['fiction+poetry'] = np.logical_and(onehot['fiction'], onehot['poetry'])
+
+print(onehot.mean())
+```
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -175,6 +175,82 @@ onehot['fiction+poetry'] = np.logical_and(onehot['fiction'], onehot['poetry'])
 print(onehot.mean())
 ```
 
+### Confidence and Lift
+- Metrics that can be used to prune weak rules in our Market basket analysis. Analyse relationship between items using two new metrics, confidence and lift.
+- While support is a useful metric, it can be misleading if examined in isolation. For example, if transcations show that milk and bread are frequently purchased together. Then Support tells us "if milk then Bread". {Milk} -> {Bread}.
+- But intutively, we know that this isn't informative for the purpose of cross-selling. Milk and bread are both popular items.
+
+#### The confidence metric
+- Fortunately, we can improve over support through the use of additional metrics. One such metric is called "confidence", which is defined as the **support of items X and Y divided by the support of item X. Support(X & Y)/ Support(X)**
+- Confidence tells us the probability that we'll purchase Y, given that we have purchased X.
+
+#### Interpreting the confidence metric
+- Lets try calculating the confidence metric for the rule "if milk then coffee" using the first five transactions only. Support(Milk & Coffee) = 0.20, Support(Milk) = 1.00.
+- Support(Milk & Coffee) / Support(Milk) = 0.20/1.00 = 0.20. This gives us the confidence value of 0.2, which means that the probability of purchasing both milk and coffee does not change if we condition on purchasing milk. This means that purchasing milk tells us nothing about purchasing coffee.
+- But what if only 4 transactions contained milk and one of those also had coffee. Then Support(Milk & Coffee) / Support(Milk) = 0.20/0.80 = 0.25. The probability would rise to 0.25.
+- Or what if it were only one transaction with milk and it also contained coffee, then 0.20/0.20 = 1.00. Then probability would rise to 1.
+
+#### The lift metric
+- The lift metric provides another way to improve over support. Lift is calculated as the Support(X & Y)/Support(X) * Support(Y).
+- Numerator : Gives us the proportion of transactions that contain X & Y.
+- Denominator tells us what that proportion would be if X and Y were randomly and independently assigned to transactions.
+- **A lift value of greater than one tells us that two items occur in transcations together more often than we would expect based on their individual support values.**
+- *This means that the relationship is unlikely to be explained by random chance.*
+- This natural threshold is convenient for filtering purposes.
+
+#### Preparing the data
+
+```python
+from mlxtend.preprocessing import TransactionEncoder
+import pandas as pd
+
+# split library strings into lines
+libraries = data['Library'].apply(lambda t:t.split(','))
+
+# convert to lists of lists
+libraries = list(libraries)
+
+# One-hot encode books
+books = TranscationEncoder().fit(libraries).transform(libraries)
+
+# convert one-hot encoded data to Dataframe
+books = pd.DataFrame(books, columns=encoder.columns_)
+```
+
+- Focus on the rule "if Hunger Games then Great Gatsby".
+
+#### Computing confidence and lift
+
+```python
+# computing support
+supportHG = np.logical_and(books['Hunger'], books['Gatsby']).mean()
+supportH = books['Hunger'].mean()
+supportG = books['Gatsby'].mean()
+
+# compute and print confidence and lift
+confidence = supportHG / supportH
+lift = supportHG / (supportH * supportG)
+
+# print results
+print(supportG, confidence, lift) # -> (0.30, 0.16, 0.53)
+```
+
+- If the reader ranks Hunger Games highly, that lowers the probability that he'll also rate Great Gatsby highly from 0.3 to 0.16.
+- Lift is less than 1, which indicates the same.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
